@@ -13,11 +13,13 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 #[cortex_m_rt::entry]
 fn main() -> ! {
     defmt::println!("Hello, world!");
+
     exit();
 }
 
 fn exit() -> ! {
+    cortex_m::interrupt::disable();
     loop {
-        cortex_m::asm::bkpt();
+        cortex_m::asm::wfi()
     }
 }
