@@ -3,16 +3,12 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        rust-overlay.follows = "rust-overlay";
-        flake-utils.follows = "flake-utils";
-      };
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    crane.url = "github:ipetkov/crane";
   };
 
   outputs = { self, flake-utils, rust-overlay, nixpkgs, crane }:
@@ -24,6 +20,7 @@
         };
         rustToolchain = pkgs.pkgsBuildHost.rust-bin.stable.latest.default.override {
           extensions = [ "rust-analyzer" "clippy" "rust-src" ];
+          targets = [ "thumbv7em-none-eabihf" ];
         };
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
         src = craneLib.cleanCargoSource ./.;
@@ -36,26 +33,15 @@
         bin = craneLib.buildPackage (commonArgs // {
           inherit cargoArtifacts;
         });
-        binaryName = "chess_website";
-        dockerImage = pkgs.dockerTools.streamLayeredImage {
-          name = bin.pname;
-          tag = "latest";
-          config = {
-            Cmd = [ "${bin}/bin/${bin.pname}" ];
-            ExposedPorts = {
-                "8080" = {};
-            };
-          };
-        };
       in
       with pkgs;
       {
         packages =
           {
-            inherit bin dockerImage;
+            inherit bin;
             default = bin;
           };
-        devShells.default = mkShell { inputsFrom = [ bin ]; buildInputs = with pkgs; [ dive ]; };
+        devShells.default = mkShell { inputsFrom = [ bin ]; };
       }
     );
 }
