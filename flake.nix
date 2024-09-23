@@ -41,7 +41,10 @@
             inherit bin;
             default = bin;
           };
-        devShells.default = mkShell { inputsFrom = [ bin ]; };
+        devShells.default = mkShell {
+          inputsFrom = [ bin ];
+          buildInputs = [ flip-link ];
+        };
       }
     );
 }
